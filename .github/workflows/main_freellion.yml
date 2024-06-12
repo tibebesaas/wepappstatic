@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP app to Azure Web App - freellion
+name: Build and deploy JAR app to Azure Web App - freellion
 
 on:
   push:
@@ -16,23 +16,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSBuild path
-        uses: microsoft/setup-msbuild@v1.0.2
+      - name: Set up Java version
+        uses: actions/setup-java@v1
+        with:
+          java-version: '8'
 
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.5
-
-      - name: Restore NuGet packages
-        run: nuget restore
-
-      - name: Publish to folder
-        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
+      - name: Build with Maven
+        run: mvn clean install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: ASP-app
-          path: '/published/**'
+          name: java-app
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: windows-latest
@@ -47,14 +43,14 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: ASP-app
+          name: java-app
       
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5083019F2EE54361BF02213D0FB5ADF9 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_80FA98FB67A14087BB3A7C1BDB56BD27 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_025942BAE12C45FAAA5724857EAC4B18 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_95169B5B0EA24B059D10A79DC5841F14 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_23B8E73AE1ED42E19C28A73392EB4500 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5E9F58E60FC04A6CB9596E9B79A970B5 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -62,5 +58,5 @@ jobs:
         with:
           app-name: 'freellion'
           slot-name: 'Production'
-          package: .
+          package: '*.jar'
           
